@@ -3,13 +3,25 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Engine/Texture.h"
+#include "Engine/DataTable.h"
+
+
+#include "GameConfig.generated.h"
 
 /**
  * 
  */
-class MYGAME_API GameConfig
+
+USTRUCT(Blueprintable, BlueprintType)
+struct FGameMapConfig 
 {
-public:
-	GameConfig();
-	~GameConfig();
+	GENERATED_USTRUCT_BODY()
+		virtual ~FGameMapConfig() { }
+	FGameMapConfig() { }
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		UTexture2D* ProvinceTex;
+
 };
+
