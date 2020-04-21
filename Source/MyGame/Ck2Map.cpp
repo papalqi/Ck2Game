@@ -56,43 +56,43 @@ void ACk2Map::InitMapData()
 	if (!ProvinceTex || !MapMeshComponent)
 	{
 		UKismetSystemLibrary::PrintString(this, TEXT("not Ready"));
-	}
+		return;
+	}	
 
-	GetTextureData(ProvinceTex);
-	
+	CopyTextureToArray(ProvinceTex);
 }
 
-
-
-
-void ACk2Map::GetTextureData(UTexture2D* m_Texture)
+void ACk2Map::CopyTextureToArray(UTexture2D* Texture)
 {
 
-	FColor* FormatedImageData = static_cast<FColor*>(m_Texture->PlatformData->Mips[0].BulkData.Lock(LOCK_READ_ONLY));
-
-	int32 SizeY = m_Texture->PlatformData->Mips[0].SizeY;
-	int32 SizeX = m_Texture->PlatformData->Mips[0].SizeX;
+	TextureCompressionSettings OldCompressionSettings = Texture->CompressionSettings;
+	TextureMipGenSettings OldMipGenSettings = Texture->MipGenSettings;
+	bool OldSRGB = Texture->SRGB;
 	MapProvinceColorData.Empty();
-	MapProvinceColorData.Reserve(SizeY*SizeX);
-	MapProvinceColorData.AddZeroed(SizeY*SizeX);
+	Texture->CompressionSettings = TextureCompressionSettings::TC_VectorDisplacementmap;
+	Texture->MipGenSettings = TextureMipGenSettings::TMGS_NoMipmaps;
+	Texture->SRGB = false;
+	Texture->UpdateResource();
+	MapWidth = Texture->GetSizeX();
+	MapHeight = Texture->GetSizeY();
+	const FColor* FormatedImageData = static_cast<const FColor*>(Texture->PlatformData->Mips[0].BulkData.LockReadOnly());
+	MapProvinceColorData.Reserve(MapHeight* MapWidth);
 
-	for (int32 y = 0; y < SizeY; y++)
+	for (int32 X = 0; X < MapWidth; X++)
 	{
-		for (int32 x = 0; x < SizeX; x++)
+		for (int32 Y = 0; Y < MapHeight; Y++)
 		{
-			int32 curPixelIndex = (y * m_Texture->PlatformData->Mips[0].SizeX) + x;
-			FColor pixel = FormatedImageData[curPixelIndex];
-			MapProvinceColorData[y*SizeX + x] = pixel;
+			FColor PixelColor = FormatedImageData[Y * MapWidth + X];
+			//×öÈô¸É²Ù×÷
+			MapProvinceColorData.Add(PixelColor);
 		}
 	}
-	m_Texture->PlatformData->Mips[0].BulkData.Unlock();
 
-	//m_Texture->CompressionSettings = OldCompressionSettings;
-	////m_Texture->MipGenSettings = OldMipGenSettings;
-	//m_Texture->SRGB = OldSRGB;
-	m_Texture->UpdateResource();
+	Texture->PlatformData->Mips[0].BulkData.Unlock();
 
-
-	//GEngine->AddOnScreenDebugMessage((uint64)-1, 2.0f, FColor::Emerald, FString::Printf(TEXT("width = %d height = %d num = %d"), m_Texture->PlatformData->Mips[0].SizeX, m_Texture->PlatformData->Mips[0].SizeY));
+	Texture->CompressionSettings = OldCompressionSettings;
+	Texture->MipGenSettings = OldMipGenSettings;
+	Texture->SRGB = OldSRGB;
+	Texture->UpdateResource();
+	
 }
-

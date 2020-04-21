@@ -46,14 +46,12 @@ public:
 	//UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ck2")
 	UStaticMeshComponent* MapMeshComponent;
 
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ck2")
-		TArray<FColor>MapProvinceColorData;
+	TArray<FColor>MapProvinceColorData;
 
 private:
+	void CopyTextureToArray(UTexture2D* Texture);
 
-
-	void GetTextureData(UTexture2D* Texture);
+	//void GetTextureData(UTexture2D* Texture);
 
 
 };
