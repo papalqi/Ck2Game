@@ -6,6 +6,7 @@
 #include "GameFramework/Actor.h"
 #include "Engine/StaticMesh.h"
 #include "Components/TextRenderComponent.h"
+#include "Engine/TextRenderActor.h"
 
 #include "Ck2Map.generated.h"
 
@@ -69,18 +70,14 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ck2")
 		float CellSizeScale;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ck2")
-		FVector TextSizeScale;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ck2")
-		float TextPositionScale;
 	//UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	//	int32 MapHeight;
 	//UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ck2")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	UStaticMeshComponent* MapMeshComponent;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite,Transient, Category = "Ck2")
-	TArray<UTextRenderComponent*> ProvincesText;
+	TArray<ATextRenderActor*> ProvincesText;
 	TArray<FColor>MapProvinceColorData;
 
 
@@ -96,5 +93,10 @@ private:
 
 	//void GetTextureData(UTexture2D* Texture);
 	TArray<FProvinceUnit> Provinces;
+
+	FVector LocalMinPosition;
+	FVector LocalMaxPosition;
+	FVector WorldMinPosition;
+	FVector CellSize;
 
 };

@@ -113,14 +113,13 @@ void ACk2Map::SetMapScale()
 
 	FVector WorldScale = FVector(MapHeight * CellSizeScale,MapWidth*CellSizeScale,1);
 	//MapMeshComponent->SetWorldScale3D(WorldScale);
-	
-	MapMeshComponent->GetLocalBounds(LocalMinPosition, LocalMaxPosition);
 	MapMeshComponent->SetRelativeScale3D(WorldScale);
+	MapMeshComponent->GetLocalBounds(LocalMinPosition, LocalMaxPosition);
+
 
 	CellSize.X= WorldScale.X*(LocalMaxPosition - LocalMinPosition).X/MapHeight;
 	CellSize.Y = WorldScale.Y*(LocalMaxPosition - LocalMinPosition).Y / MapWidth;
-	CellSize.Z = 0;
-	WorldMinPosition=MapMeshComponent->GetComponentLocation()- FVector(MapHeight/2, MapWidth/2,0)*CellSize;
+	WorldMinPosition=MapMeshComponent->GetComponentLocation();
 
 }
 
@@ -187,12 +186,9 @@ void ACk2Map::SpawnText()
 		{
 		
 			
-			FVector location = WorldMinPosition + CellSize* FVector(a.OrigineVector.X, a.OrigineVector.Y, 0)+FVector(0,0,1);
+			FVector location = WorldMinPosition + CellSize* FVector(a.OrigineVector.X, a.OrigineVector.Y, 0 );
 			ATextRenderActor* temp=GetWorld()->SpawnActor<ATextRenderActor>();
-			temp->GetTextRender()->SetText(FText::FromName(a.ProvinceName));
 			temp->SetActorLocation(location);
-			temp->SetActorRotation(FRotator(90,0,0));
-			temp->SetActorScale3D(FVector(0.5, 0.5, 0.5));
 			ProvincesText.Add(temp);
 
 
@@ -254,7 +250,7 @@ void FProvinceUnit::GetOutLine(int32 Width, int32 Height, TArray<FColor>& MapPro
 	}
 	
 	//由于是从上向下，从左到右，所以我们需要
-	OrigineVector = (OutLine2DCoordinate[0] + OutLine2DCoordinate[OutLine2DCoordinate.Num() / 2])/2;
+	OrigineVector = OutLine2DCoordinate[0] + OutLine2DCoordinate[OutLine2DCoordinate.Num() / 2];
 
 
 
