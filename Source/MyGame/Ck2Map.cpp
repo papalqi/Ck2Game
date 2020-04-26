@@ -6,6 +6,7 @@
 #include "Components/StaticMeshComponent.h"
 #include "UObject/ConstructorHelpers.h"
 #include "Kismet/KismetSystemLibrary.h"
+#include "Components/TextRenderComponent.h"
 
 // Sets default values
 ACk2Map::ACk2Map()
@@ -60,6 +61,12 @@ void ACk2Map::InitMapData()
 	}	
 
 	CopyTextureToArray(ProvinceTex);
+
+	SetMapScale();
+
+	InitMapTextureData();
+
+	SpawnText();
 }
 
 void ACk2Map::CopyTextureToArray(UTexture2D* Texture)
@@ -78,11 +85,11 @@ void ACk2Map::CopyTextureToArray(UTexture2D* Texture)
 	const FColor* FormatedImageData = static_cast<const FColor*>(Texture->PlatformData->Mips[0].BulkData.LockReadOnly());
 	MapProvinceColorData.Reserve(MapHeight* MapWidth);
 
-	for (int32 X = 0; X < MapWidth; X++)
+	for (int32 X = 0; X < MapHeight; X++)
 	{
-		for (int32 Y = 0; Y < MapHeight; Y++)
+		for (int32 Y = 0; Y < MapWidth; Y++)
 		{
-			FColor PixelColor = FormatedImageData[Y * MapWidth + X];
+			FColor PixelColor = FormatedImageData[X * MapWidth + Y];
 			//做若干操作
 			MapProvinceColorData.Add(PixelColor);
 		}
@@ -95,4 +102,169 @@ void ACk2Map::CopyTextureToArray(UTexture2D* Texture)
 	Texture->SRGB = OldSRGB;
 	Texture->UpdateResource();
 	
+}
+
+void ACk2Map::SetMapScale()
+{
+	if (CellSizeScale == 0)
+	{
+		CellSizeScale = 1;
+	}
+
+	FVector WorldScale = FVector(MapWidth* CellSizeScale,MapHeight*CellSizeScale,1);
+	MapMeshComponent->SetWorldScale3D(WorldScale);
+
+}
+
+void ACk2Map::InitMapTextureData()
+{
+
+	Provinces.Empty();
+
+	TMap<FColor, FProvinceUnit> ProvinceData;
+
+	for (int32 X = 0; X < MapHeight; X++)
+	{
+		for (int32 Y = 0; Y < MapWidth; Y++)
+		{
+			FColor PixelColor = MapProvinceColorData[X * MapWidth + Y];
+			FProvinceUnit* ProvinceUnit=ProvinceData.Find(PixelColor);
+			//如果有值
+			if (ProvinceUnit)
+			{
+				(ProvinceUnit)->AllCoordinate.Add(X * MapWidth + Y);
+			}
+			else
+			{
+				//如果没有值，我们新建
+				FProvinceUnit temp;
+				temp.ProvinceColor = PixelColor;
+				temp.ProvinceName = FName(*FString::FromInt(X * MapWidth + Y));
+				temp.AllCoordinate.Add(X * MapWidth + Y);
+				temp.ProvinceID = ProvinceData.Num();
+			
+				ProvinceData.Add(PixelColor, temp);
+			}
+		}
+	}
+
+	for (auto &a : ProvinceData)
+	{
+		Provinces.Add(a.Value);
+	}
+
+	for (auto& a : Provinces)
+	{
+		a.InitProvince(MapWidth,MapHeight);
+		a.GetOutLine(MapWidth, MapHeight,MapProvinceColorData);
+	}
+
+	
+}
+
+void ACk2Map::SpawnText()
+{
+	ProvincesText.Empty();
+	if (ProvincesText.Num() != 0)
+	{
+
+		for (int i=0;i!= Provinces.Num();i++)
+		{
+			UTextRenderComponent* MapTextComponent = ProvincesText[i];
+
+			FVector location = FVector(Provinces[i].OrigineVector.X, Provinces[i].OrigineVector.Y, 0) * TextPositionScale;
+
+			//MapTextComponent->RegisterComponent();
+			//MapTextComponent->SetMobility(EComponentMobility::Movable);
+			//MapTextComponent->SetWorldSize(100);
+			//MapTextComponent->SetupAttachment(RootComponent);
+			//MapTextComponent->RegisterComponent();
+			//MapTextComponent->AddToRoot();
+			MapTextComponent->SetWorldLocation(location);
+			MapTextComponent->SetWorldScale3D(TextSizeScale);
+			
+			//RegisterAllComponents();
+		}
+
+	}
+	else
+	{
+		for (auto& a : Provinces)
+		{
+			UTextRenderComponent* MapTextComponent = NewObject<UTextRenderComponent>(this);
+
+			FVector location = FVector(a.OrigineVector.X, a.OrigineVector.Y, 0) * CellSizeScale* TextPositionScale;
+
+			//MapTextComponent->RegisterComponent();
+			MapTextComponent->SetMobility(EComponentMobility::Movable);
+			//MapTextComponent->SetWorldSize(100);
+			MapTextComponent->SetupAttachment(RootComponent);
+			MapTextComponent->RegisterComponent();
+			//MapTextComponent->AddToRoot();
+			MapTextComponent->SetWorldLocation(location);
+			MapTextComponent->SetWorldScale3D(TextSizeScale);
+			ProvincesText.Add(MapTextComponent);
+			RegisterAllComponents();
+		}
+	}
+
+
+
+}
+
+
+void FProvinceUnit::InitProvince(int32 Width, int32 Height)
+{
+	if (AllCoordinate.Num() == 0)
+	{
+		return;
+	}
+	for (auto& a : AllCoordinate)
+	{
+		All2DCoordinate.Add(FVector2D(a / Width, a % Width));
+	}
+}
+
+
+static TArray<FVector2D> OutlineBias
+{ 
+FVector2D (1,0), FVector2D(0,1), 
+FVector2D(-1,0),  FVector2D(0,-1),
+FVector2D(-1,1),  FVector2D(1,-1),
+FVector2D(-1,-1),  FVector2D(1,1)
+};
+
+
+void FProvinceUnit::GetOutLine(int32 Width, int32 Height, TArray<FColor>& MapProvinceColorData)
+{
+	for (auto& a : All2DCoordinate)
+	{
+		//如果在map的边缘
+		if (a.X == 0 || a.Y == 0 || a.X == Height - 1 || a.Y == Width - 1)
+		{
+			OutLine2DCoordinate.Add(a);
+			OutLineCoordinate.Add(a.X * Width + a.Y);
+			continue;
+		}
+		for (auto &bias: OutlineBias)
+		{
+			
+			FVector2D b= a+bias;
+			FColor OtherColor = MapProvinceColorData[b.X * Width + b.Y];
+			if (OtherColor != ProvinceColor)
+			{
+				OutLine2DCoordinate.Add(a);
+				OutLineCoordinate.Add(a.X * Width + a.Y);
+				break;
+			}
+		}
+
+
+	}
+	
+	//由于是从上向下，从左到右，所以我们需要
+	OrigineVector = OutLine2DCoordinate[0] + OutLine2DCoordinate[OutLine2DCoordinate.Num() / 2];
+
+
+
 }
