@@ -7,6 +7,7 @@
 #include "Engine/StaticMesh.h"
 #include "Components/TextRenderComponent.h"
 #include "Engine/TextRenderActor.h"
+#include "Engine/DataTable.h"
 
 #include "Ck2Map.generated.h"
 
@@ -22,13 +23,36 @@ struct FProvinceUnit
 	TArray<FVector2D> OutLine2DCoordinate;
 
 	FVector2D OrigineVector;
+	FVector WorldVector;
 	void InitProvince(int32 Width,int32 Height);
 
 	void GetOutLine(int32 Width, int32 Height, TArray<FColor>&MapProvinceColorData);
 
 };
 
+USTRUCT(BlueprintType)
+struct FDataTableMapData : public FTableRowBase
+{
+	GENERATED_USTRUCT_BODY()
 
+public:
+
+	FDataTableMapData()
+	{}
+
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "DataTable Test")
+		int32 province;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "DataTable Test")
+		int32 red;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "DataTable Test")
+		int32 green;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "DataTable Test")
+		int32 blue;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "DataTable Test")
+		FString name;
+};
 
 
 
@@ -78,9 +102,13 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite,Transient, Category = "Ck2")
 	TArray<ATextRenderActor*> ProvincesText;
+	
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		UDataTable* MapDefine;
+
+
 	TArray<FColor>MapProvinceColorData;
-
-
 
 private:
 	void CopyTextureToArray(UTexture2D* Texture);

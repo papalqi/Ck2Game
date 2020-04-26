@@ -130,6 +130,11 @@ void ACk2Map::InitMapTextureData()
 	Provinces.Empty();
 
 	TMap<FColor, FProvinceUnit> ProvinceData;
+	//
+	//const TCHAR* ContextString;
+	FString ContextString;
+	TArray<FDataTableMapData*> MapData;
+	MapDefine->GetAllRows<FDataTableMapData>(ContextString, MapData);
 
 	for (int32 X = 0; X < MapHeight; X++)
 	{
@@ -144,12 +149,30 @@ void ACk2Map::InitMapTextureData()
 			}
 			else
 			{
+				FDataTableMapData* tempMap=nullptr;
+				for (auto &a: MapData)
+				{
+					FColor MapColor(a->red,a->green,a->blue);
+					if (MapColor == PixelColor)
+					{
+						tempMap = a;
+					}
+				}
 				//如果没有值，我们新建
 				FProvinceUnit temp;
 				temp.ProvinceColor = PixelColor;
-				temp.ProvinceName = FName(*FString::FromInt(X * MapWidth + Y));
+				if (tempMap != nullptr)
+				{
+					temp.ProvinceName = *tempMap->name;
+					temp.ProvinceID = tempMap->province;
+				}
+				else
+				{
+					temp.ProvinceName = FName(*FString::FromInt(X * MapWidth + Y));
+					temp.ProvinceID = ProvinceData.Num();
+				}
+				
 				temp.AllCoordinate.Add(X * MapWidth + Y);
-				temp.ProvinceID = ProvinceData.Num();
 			
 				ProvinceData.Add(PixelColor, temp);
 			}
@@ -186,8 +209,10 @@ void ACk2Map::SpawnText()
 		for (auto& a : Provinces)
 		{
 		
-			
-			FVector location = WorldMinPosition + CellSize* FVector(a.OrigineVector.X, a.OrigineVector.Y, 0)+FVector(0,0,1);
+			FVector location = WorldMinPosition + CellSize* FVector(a.OrigineVector.X, MapWidth-a.OrigineVector.Y-1, 0)+FVector(0,0,5);
+			a.WorldVector= location;
+
+
 			ATextRenderActor* temp=GetWorld()->SpawnActor<ATextRenderActor>();
 			temp->GetTextRender()->SetText(FText::FromName(a.ProvinceName));
 			temp->SetActorLocation(location);
@@ -252,9 +277,17 @@ void FProvinceUnit::GetOutLine(int32 Width, int32 Height, TArray<FColor>& MapPro
 
 
 	}
+
+
+	FVector2D Temp;
+	for (auto& a : All2DCoordinate)
+	{
+		 Temp = Temp + a;
+	}
+
 	
 	//由于是从上向下，从左到右，所以我们需要
-	OrigineVector = (OutLine2DCoordinate[0] + OutLine2DCoordinate[OutLine2DCoordinate.Num() / 2])/2;
+	OrigineVector = Temp/ All2DCoordinate.Num();
 
 
 
