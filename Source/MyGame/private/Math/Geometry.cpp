@@ -1,9 +1,9 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "Geometry.h"
-#include "Ck2Line.h"
-#include "Ck2Math.h"
+#include "Math/Geometry.h"
+#include "Math/Ck2Line.h"
+#include "Math/Ck2Math.h"
 
 
 

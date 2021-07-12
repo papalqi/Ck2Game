@@ -1,5 +1,5 @@
-#include "Ck2Line.h"
-#include "Ck2Math.h"
+#include "Math/Ck2Line.h"
+#include "Math/Ck2Math.h"
 
 
 FLineSegment::FLineSegment(FVector2D a, FVector2D b)

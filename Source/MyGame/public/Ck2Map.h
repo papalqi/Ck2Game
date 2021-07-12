@@ -6,53 +6,15 @@
 #include "GameFramework/Actor.h"
 #include "Engine/StaticMesh.h"
 #include "Components/TextRenderComponent.h"
-#include "Engine/TextRenderActor.h"
-#include "Engine/DataTable.h"
+
+#include "MapData.h"
+#include "Province.h"
 
 #include "Ck2Map.generated.h"
 
 
-struct FProvinceUnit
-{
-	int32 ProvinceID;
-	TArray<int32> AllCoordinate;
-	TArray<int32> OutLineCoordinate;
-	FColor ProvinceColor;
-	FName ProvinceName;
-	TArray<FVector2D> All2DCoordinate;
-	TArray<FVector2D> OutLine2DCoordinate;
-
-	FVector2D OrigineVector;
-	FVector WorldVector;
-	void InitProvince(int32 Width,int32 Height);
-
-	void GetOutLine(int32 Width, int32 Height, TArray<FColor>&MapProvinceColorData);
-
-};
-
-USTRUCT(BlueprintType)
-struct FDataTableMapData : public FTableRowBase
-{
-	GENERATED_USTRUCT_BODY()
-
-public:
-
-	FDataTableMapData()
-	{}
 
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "DataTable Test")
-		int32 province;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "DataTable Test")
-		int32 red;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "DataTable Test")
-		int32 green;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "DataTable Test")
-		int32 blue;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "DataTable Test")
-		FString name;
-};
 
 
 
@@ -73,7 +35,7 @@ public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 	UFUNCTION(CallInEditor, Category = "Ck2")
-		virtual void InitMapData();
+	virtual void InitMapData();
 
 public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ck2")
@@ -94,21 +56,23 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ck2")
 		float CellSizeScale;
 
-	//UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	//	int32 MapHeight;
-	//UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ck2")
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	UStaticMeshComponent* MapMeshComponent;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite,Transient, Category = "Ck2")
-	TArray<ATextRenderActor*> ProvincesText;
+	//UPROPERTY(EditAnywhere, BlueprintReadWrite,Transient, Category = "Ck2")
+	//TArray<ATextRenderActor*> ProvincesText;
 	
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-		UDataTable* MapDefine;
+	UDataTable* MapDefine;
 
+	FMapColorData MapColorData;
 
-	TArray<FColor>MapProvinceColorData;
+	//TArray<FColor>MapProvinceColorData;
+public:
+	FVector GetWorldMinPosition() { return WorldMinPosition; };
+
+	FVector GetCellSize() { return CellSize; };
 
 private:
 	void CopyTextureToArray(UTexture2D* Texture);
@@ -117,11 +81,13 @@ private:
 
 	void InitMapTextureData();
 
-	void SpawnText();
 
-	//void GetTextureData(UTexture2D* Texture);
-	TArray<FProvinceUnit> Provinces;
+	UPROPERTY()
+	UProvinceManager* ProvinceManager;
+	//TArray<FProvinceUnit> Provinces;
 
+	//UPROPERTY()
+	//TArray<UProvince*> AllProvinces;
 	FVector LocalMinPosition;
 	FVector LocalMaxPosition;
 	FVector WorldMinPosition;
