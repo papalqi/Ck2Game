@@ -29,7 +29,6 @@ public:
 		int32 green;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "DataTable Test")
 		int32 blue;
-
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "DataTable Test")
 		FString name;
 };
@@ -45,6 +44,4 @@ public:
 	int32 Width;
 	int32 Height;
 	TArray<FColor>ColorData;
-
-
 };

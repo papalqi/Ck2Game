@@ -1,6 +1,8 @@
 #include "Province.h"
 #include "MapData.h"
+#include "Engine/TextRenderActor.h"
 #include "Ck2Map.h"
+#include "Components/TextRenderComponent.h"
 static TArray<FVector2D> OutlineBias
 {
 	FVector2D(1,0), FVector2D(0,1),
@@ -12,31 +14,54 @@ static TArray<FVector2D> OutlineBias
 
 void UProvince::GetOutLine(int32 Width, int32 Height, TArray<FColor>& MapProvinceColorData)
 {
-	for (auto& a : All2DCoordinate)
+	TArray<FVector2D> TempOutLine2DCoordinate;
+	TArray<int32> TempOutLineCoordinateIndex;
+	for (auto& Coord : All2DCoordinate)
 	{
-		//如果在map的边缘
-		if (a.X == 0 || a.Y == 0 || a.X == Height - 1 || a.Y == Width - 1)
+		//如果在map的边缘,就说明是边缘
+		if (Coord.X == 0 || Coord.Y == 0 || Coord.X == Height - 1 || Coord.Y == Width - 1)
 		{
-			OutLine2DCoordinate.Add(a);
-			OutLineCoordinate.Add(a.X * Width + a.Y);
+			TempOutLine2DCoordinate.Add(Coord);
+			TempOutLineCoordinateIndex.Add(Coord.X * Width + Coord.Y);
 			continue;
 		}
+
 		for (auto &bias : OutlineBias)
 		{
 
-			FVector2D b = a + bias;
+			FVector2D b = Coord + bias;
 			FColor OtherColor = MapProvinceColorData[b.X * Width + b.Y];
 			if (OtherColor != ProvinceColor)
 			{
-				OutLine2DCoordinate.Add(a);
-				OutLineCoordinate.Add(a.X * Width + a.Y);
+				TempOutLine2DCoordinate.Add(Coord);
+				TempOutLineCoordinateIndex.Add(Coord.X * Width + Coord.Y);
 				break;
 			}
 		}
-
-
 	}
+	//找有顺序的边界
+	//OutLine2DCoordinate.Empty();
+	//for (int i=0;i!= TempOutLine2DCoordinate.Num();i++)
+	//{
+	//	if (TempOutLine2DCoordinate.Num()==0)
+	//	{
+	//		OutLine2DCoordinate.Add(TempOutLine2DCoordinate[0]);
+	//	}
+	//	else
+	//	{
+	//		FVector2D PreOutLine=OutLine2DCoordinate.Last();
+	//		for (int j = 0; j != TempOutLine2DCoordinate.Num(); j++)
+	//		{
+	//			if (PreOutLine!= TempOutLine2DCoordinate[j]&&)
+	//			{
+	//			}
+	//		}
 
+
+	//	}
+	//}
+	All2DCoordinate= TempOutLine2DCoordinate;
+	OutLineCoordinateIndex= TempOutLineCoordinateIndex;
 
 	FVector2D Temp;
 	for (auto& a : All2DCoordinate)
@@ -51,11 +76,17 @@ void UProvince::GetOutLine(int32 Width, int32 Height, TArray<FColor>& MapProvinc
 
 void UProvince::InitProvince(int32 Width, int32 Height)
 {
-	if (AllCoordinate.Num() == 0)
+	if (IsValid(RenderActor))
+	{
+		RenderActor->Destroy(true);
+		RenderActor = nullptr;
+	}
+
+	if (AllCoordinateIndex.Num() == 0)
 	{
 		return;
 	}
-	for (auto& a : AllCoordinate)
+	for (auto& a : AllCoordinateIndex)
 	{
 		All2DCoordinate.Add(FVector2D(a / Width, a % Width));
 	}
@@ -90,7 +121,7 @@ void UProvinceManager::Init(ACk2Map* InMapActor,FMapColorData& MapColorData, TAr
 			//如果我们找到的话
 			if (ProvinceUnit)
 			{
-				(*ProvinceUnit)->AllCoordinate.Add(X * MapWidth + Y);
+				(*ProvinceUnit)->AllCoordinateIndex.Add(X * MapWidth + Y);
 			}
 			else
 			{
@@ -117,7 +148,7 @@ void UProvinceManager::Init(ACk2Map* InMapActor,FMapColorData& MapColorData, TAr
 					temp->ProvinceID = MapData.Num();
 				}
 
-				temp->AllCoordinate.Add(X * MapWidth + Y);
+				temp->AllCoordinateIndex.Add(X * MapWidth + Y);
 
 				ColorToProcince.Add(PixelColor, temp);
 			}
@@ -148,4 +179,9 @@ void UProvinceManager::SpawnText()
 	{
 		It->Value->SpawnText();
 	}
+}
+
+void UProvinceManager::ClearText()
+{
+
 }

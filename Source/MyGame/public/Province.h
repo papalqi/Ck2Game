@@ -25,8 +25,8 @@ class UProvince : public UObject
 public:
 	int32 ProvinceID;
 	//所有的Map里的
-	TArray<int32> AllCoordinate;
-	TArray<int32> OutLineCoordinate;
+	TArray<int32> AllCoordinateIndex;
+	TArray<int32> OutLineCoordinateIndex;
 	FColor ProvinceColor;
 	FName ProvinceName;
 	TArray<FVector2D> All2DCoordinate;
@@ -51,9 +51,12 @@ class UProvinceManager : public UObject
 public:
 	void Init(ACk2Map* InMapActor,FMapColorData& MapColorData, TArray<FDataTableMapData*> &MapData);
 
+
+protected:
 	void SpawnText();
+	void ClearText();
 
-
+public:
 	UPROPERTY()
 	TMap<FColor, UProvince*> ColorToProcince;
 

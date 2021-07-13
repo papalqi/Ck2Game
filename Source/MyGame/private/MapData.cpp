@@ -3,8 +3,7 @@
 
 
 FMapColorData::FMapColorData(int32 InHeight, int32 InWidth)
-:Height(InHeight),
-Width(InWidth)
+:Width(InWidth),Height(InHeight)
 {
 	ColorData.Reserve(Height*Width);
 }

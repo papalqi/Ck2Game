@@ -6,15 +6,11 @@
 #include "Components/StaticMeshComponent.h"
 #include "UObject/ConstructorHelpers.h"
 #include "Kismet/KismetSystemLibrary.h"
-#include "Components/TextRenderComponent.h"
 
 // Sets default values
 ACk2Map::ACk2Map()
 {
- 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
-
-
 	static ConstructorHelpers::FObjectFinder<UStaticMesh> TemStaticMesh(TEXT("StaticMesh'/Game/Mesh/Plane.Plane'"));
 
 	USceneComponent* RootScene = CreateDefaultSubobject<USceneComponent>(TEXT("RootScene"));
@@ -35,6 +31,12 @@ ACk2Map::ACk2Map()
 		}
 
 	}
+
+
+	if (!MapConfig)
+	{
+		MapConfig=NewObject<UMapConfig>();
+	}
 }
 
 // Called when the game starts or when spawned
@@ -53,14 +55,13 @@ void ACk2Map::Tick(float DeltaTime)
 
 void ACk2Map::InitMapData()
 {
-	if (!ProvinceTex || !MapMeshComponent)
+	if (!MapConfig->ProvinceTex || !MapMeshComponent)
 	{
 		UKismetSystemLibrary::PrintString(this, TEXT("not Ready"));
 		return;
 	}	
 
-	CopyTextureToArray(ProvinceTex);
-
+	MapColorData= FMapConfigHelper::GetColorData(MapConfig->ProvinceTex);
 	SetMapScale();
 
 	InitMapTextureData();
@@ -68,34 +69,6 @@ void ACk2Map::InitMapData()
 
 }
 
-void ACk2Map::CopyTextureToArray(UTexture2D* Texture)
-{
-
-	TextureCompressionSettings OldCompressionSettings = Texture->CompressionSettings;
-	TextureMipGenSettings OldMipGenSettings = Texture->MipGenSettings;
-	bool OldSRGB = Texture->SRGB;
-	Texture->CompressionSettings = TextureCompressionSettings::TC_VectorDisplacementmap;
-	Texture->MipGenSettings = TextureMipGenSettings::TMGS_NoMipmaps;
-	Texture->SRGB = false;
-	Texture->UpdateResource();
-	MapWidth = Texture->GetSizeX();
-	MapHeight = Texture->GetSizeY();
-	const FColor* FormatedImageData = static_cast<const FColor*>(Texture->PlatformData->Mips[0].BulkData.LockReadOnly());
-
-
-	MapColorData = FMapColorData(MapHeight, MapWidth);
-
-	MapColorData.Init(FormatedImageData);
-
-
-	Texture->PlatformData->Mips[0].BulkData.Unlock();
-
-	Texture->CompressionSettings = OldCompressionSettings;
-	Texture->MipGenSettings = OldMipGenSettings;
-	Texture->SRGB = OldSRGB;
-	Texture->UpdateResource();
-	
-}
 
 void ACk2Map::SetMapScale()
 {
@@ -104,16 +77,16 @@ void ACk2Map::SetMapScale()
 		CellSizeScale = 1;
 	}
 
-	FVector WorldScale = FVector(MapHeight * CellSizeScale,MapWidth*CellSizeScale,1);
+	FVector WorldScale = FVector(MapColorData.Height * CellSizeScale, MapColorData .Width*CellSizeScale,1);
 	//MapMeshComponent->SetWorldScale3D(WorldScale);
 	
 	MapMeshComponent->GetLocalBounds(LocalMinPosition, LocalMaxPosition);
 	MapMeshComponent->SetRelativeScale3D(WorldScale);
 
-	CellSize.X= WorldScale.X*(LocalMaxPosition - LocalMinPosition).X/MapHeight;
-	CellSize.Y = WorldScale.Y*(LocalMaxPosition - LocalMinPosition).Y / MapWidth;
+	CellSize.X= WorldScale.X*(LocalMaxPosition - LocalMinPosition).X/ MapColorData.Height;
+	CellSize.Y = WorldScale.Y*(LocalMaxPosition - LocalMinPosition).Y / MapColorData.Width;
 	CellSize.Z = 0;
-	WorldMinPosition=MapMeshComponent->GetComponentLocation()- FVector(MapHeight/2, MapWidth/2,0)*CellSize;
+	WorldMinPosition=MapMeshComponent->GetComponentLocation()- FVector(MapColorData.Height /2, MapColorData.Width /2,0)*CellSize;
 
 }
 
@@ -122,7 +95,7 @@ void ACk2Map::InitMapTextureData()
 	ProvinceManager=NewObject<UProvinceManager>();
 	FString ContextString;
 	TArray<FDataTableMapData*> MapData;
-	MapDefine->GetAllRows<FDataTableMapData>(ContextString, MapData);
+	MapConfig->MapDefine->GetAllRows<FDataTableMapData>(ContextString, MapData);
 
 	ProvinceManager->Init(this,MapColorData, MapData);
 }
