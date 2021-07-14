@@ -35,7 +35,7 @@ ACk2Map::ACk2Map()
 
 	if (!MapConfig)
 	{
-		MapConfig=NewObject<UMapConfig>();
+		MapConfig= CreateDefaultSubobject<UMapConfig>("MapConfig");
 	}
 }
 
@@ -55,7 +55,16 @@ void ACk2Map::Tick(float DeltaTime)
 
 void ACk2Map::InitMapData()
 {
-	if (!MapConfig->ProvinceTex || !MapMeshComponent)
+	if (!MapConfig)
+	{
+		MapConfig = NewObject<UMapConfig>();
+
+	}
+	if (!ProvinceManager)
+	{
+		ProvinceManager = NewObject<UProvinceManager>();
+	}
+	if (!MapConfig||!MapConfig->ProvinceTex || !MapMeshComponent)
 	{
 		UKismetSystemLibrary::PrintString(this, TEXT("not Ready"));
 		return;
@@ -92,7 +101,6 @@ void ACk2Map::SetMapScale()
 
 void ACk2Map::InitMapTextureData()
 {
-	ProvinceManager=NewObject<UProvinceManager>();
 	FString ContextString;
 	TArray<FDataTableMapData*> MapData;
 	MapConfig->MapDefine->GetAllRows<FDataTableMapData>(ContextString, MapData);

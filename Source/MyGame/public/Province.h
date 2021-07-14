@@ -10,6 +10,7 @@
 #include "CoreMinimal.h"
 #include "Engine/TextRenderActor.h"
 #include "MapData.h"
+#include "Components/SplineComponent.h"
 #include"Province.generated.h"
 
 
@@ -19,10 +20,13 @@ class ACk2Map;
 struct FMapColorData;
 
 UCLASS()
-class UProvince : public UObject
+class AProvince : public AActor
 {
 	GENERATED_BODY()
 public:
+
+	AProvince();
+
 	int32 ProvinceID;
 	//所有的Map里的
 	TArray<int32> AllCoordinateIndex;
@@ -34,12 +38,21 @@ public:
 
 	FVector2D OrigineVector;
 	FVector WorldVector;
+
+	FVector WorldBias;
+	FVector CellScale;
+
+	TArray<FVector>GetOutLineWorldPositions();
 	void InitProvince(int32 Width, int32 Height);
 
 	void SpawnText();
-	void GetOutLine(int32 Width, int32 Height, TArray<FColor>& MapProvinceColorData);
+	void CreateOutLine(int32 Width, int32 Height, TArray<FColor>& MapProvinceColorData);
+
 	UPROPERTY()
-	ATextRenderActor* RenderActor;
+	UTextRenderComponent* TextRenderComponent;
+
+	UPROPERTY()
+	USplineComponent* SplineComponent;
 };
 
 
@@ -58,7 +71,7 @@ protected:
 
 public:
 	UPROPERTY()
-	TMap<FColor, UProvince*> ColorToProcince;
+	TMap<FColor, AProvince*> ColorToProcince;
 
 	ACk2Map* MapActor;
 
